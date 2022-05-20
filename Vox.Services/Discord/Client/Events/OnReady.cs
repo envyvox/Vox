@@ -46,8 +46,7 @@ public class OnReadyHandler : IRequestHandler<OnReady>
                 _logger.LogInformation(
                     "Env is development, registering commands to guilds");
 
-                await request.InteractionService.RegisterCommandsToGuildAsync(_options.LabGuildId);
-                await request.InteractionService.RegisterCommandsToGuildAsync(_options.LobbyGuildId);
+                await request.InteractionService.RegisterCommandsToGuildAsync(_options.TestingGuildId);
             }
             else
             {
