@@ -1,0 +1,7 @@
+﻿version: '3.5'
+services:
+  bot:
+    image: registry.envyvox.app/vox
+    build:
+      context: .
+      dockerfile: ./Vox/Dockerfile

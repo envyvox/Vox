@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vox", "Vox\Vox.csproj", "{814145B6-F9A5-4E7D-BA4F-1941171BD4BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vox.Data", "Vox.Data\Vox.Data.csproj", "{F818DC3F-88CD-4F10-8BD3-9A6127D5D0DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vox.Services", "Vox.Services\Vox.Services.csproj", "{043FE886-FF95-45A5-BD3C-A1E622ED246F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{814145B6-F9A5-4E7D-BA4F-1941171BD4BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{814145B6-F9A5-4E7D-BA4F-1941171BD4BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{814145B6-F9A5-4E7D-BA4F-1941171BD4BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{814145B6-F9A5-4E7D-BA4F-1941171BD4BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F818DC3F-88CD-4F10-8BD3-9A6127D5D0DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F818DC3F-88CD-4F10-8BD3-9A6127D5D0DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F818DC3F-88CD-4F10-8BD3-9A6127D5D0DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F818DC3F-88CD-4F10-8BD3-9A6127D5D0DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{043FE886-FF95-45A5-BD3C-A1E622ED246F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{043FE886-FF95-45A5-BD3C-A1E622ED246F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{043FE886-FF95-45A5-BD3C-A1E622ED246F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{043FE886-FF95-45A5-BD3C-A1E622ED246F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
