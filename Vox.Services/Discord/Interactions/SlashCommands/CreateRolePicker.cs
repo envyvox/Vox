@@ -27,6 +27,7 @@ public class CreateRolePicker : InteractionModuleBase<SocketInteractionContext>
 
         var roles = input
             .Split(' ')
+            .Where(x => x != "") // just check there is no empty items in array
             .Select(roleString => Context.Guild.GetRole(ulong.Parse(Regex.Replace(roleString, @"[^\d]", ""))))
             .Where(role => role is not null)
             .ToList();
