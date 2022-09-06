@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
@@ -42,7 +43,7 @@ public class CreatePoll : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync(true);
 
-        var answers = inputAnswers
+        var answers = Regex.Replace(inputAnswers, " *, *", ",")
             .Split(',')
             .Distinct()
             .ToArray();
