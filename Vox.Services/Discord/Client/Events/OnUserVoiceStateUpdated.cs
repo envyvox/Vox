@@ -64,7 +64,7 @@ public class OnUserVoiceStateUpdatedHandler : IRequestHandler<OnUserVoiceStateUp
             guildCreateChannels
                 .Select(x => x.ChannelId)
                 .Contains((long) oldChannel.Id) is false &&
-            oldChannel.Users.Count == 0)
+            oldChannel.ConnectedUsers.Count == 0)
         {
             await oldChannel.DeleteAsync();
         }
