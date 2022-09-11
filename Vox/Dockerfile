@@ -4,6 +4,7 @@
 COPY Vox ./Vox
 COPY Vox.Data ./Vox.Data
 COPY Vox.Services ./Vox.Services
+COPY ../Vox.Data/Localizations ./
 
 RUN dotnet restore Vox/Vox.csproj
 RUN dotnet publish Vox/*.csproj -c Release -o out
