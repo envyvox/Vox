@@ -18,7 +18,7 @@ public class CreateRolePicker : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("create-role-picker", "Creates a role picker to select the specified roles (max 25)")]
     public async Task Execute(
         [Summary("type", "Role picker type")] ComponentType componentType,
-        [Summary("roles", "List of roles separated by spaces (use mention)")]
+        [Summary("roles", "List of roles separated by spaces (use @mention)")]
         string input,
         [Summary("limit", "Number of roles that can be selected (only for the dropdown list)")]
         int roleLimit = 0)

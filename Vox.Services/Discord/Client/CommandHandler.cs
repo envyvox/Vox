@@ -30,6 +30,10 @@ public class CommandHandler
         _commands = interactionService;
         _services = serviceProvider;
 
+        _commands.LocalizationManager = new JsonLocalizationManager(
+            "../Vox.Data/Localizations",
+            "local");
+
         await _commands.AddModulesAsync(typeof(IDiscordClientService).Assembly, _services);
 
         _client.InteractionCreated += HandleInteraction;
