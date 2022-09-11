@@ -27,7 +27,6 @@ public class GetPollHandler : IRequestHandler<GetPollQuery, PollDto>
     public async Task<PollDto> Handle(GetPollQuery request, CancellationToken ct)
     {
         var entity = await _db.Polls
-            .Include(x => x.Guild)
             .SingleOrDefaultAsync(x => x.Id == request.Id);
 
         if (entity is null)

@@ -22,14 +22,16 @@ public class PollAnswerButton : InteractionModuleBase<SocketInteractionContext>
     }
 
     [ComponentInteraction("poll-answer-button:*,*")]
-    public async Task Execute(string pollIdString, string answer)
+    public async Task Execute(string pollIdString, string answerId)
     {
         await DeferAsync(true);
 
         var poll = await _mediator.Send(new GetPollQuery(Guid.Parse(pollIdString)));
+        var pollAnswers = await _mediator.Send(new GetPollAnswersQuery(poll.Id));
         var userAnswers = await _mediator.Send(new GetUserPollAnswersQuery((long) Context.User.Id, poll.Id));
+        var pollAnswer = pollAnswers.Single(x => x.Id == Guid.Parse(answerId));
 
-        if (userAnswers.Select(x => x.Answer).Contains(answer))
+        if (userAnswers.Any(x => x.Answer.Id == pollAnswer.Id))
         {
             throw new ExpectedException(Response.PollAnswersAlready.Parse(Context.Guild.PreferredLocale));
         }
@@ -40,7 +42,7 @@ public class PollAnswerButton : InteractionModuleBase<SocketInteractionContext>
                 poll.MaxAnswers));
         }
 
-        await _mediator.Send(new CreatePollAnswerCommand((long) Context.User.Id, poll.Id, answer));
+        await _mediator.Send(new CreateUserPollAnswerCommand((long) Context.User.Id, poll.Id, pollAnswer.Id));
 
         var embed = new EmbedBuilder()
             .WithDefaultColor()
@@ -48,7 +50,7 @@ public class PollAnswerButton : InteractionModuleBase<SocketInteractionContext>
                 Response.Poll.Parse(Context.Guild.PreferredLocale),
                 Context.User.GetAvatarUrl())
             .WithDescription(Response.PollAnswerDesc.Parse(Context.Guild.PreferredLocale,
-                Context.User.Mention, answer));
+                Context.User.Mention, pollAnswer.Answer));
 
         await FollowupAsync(embed: embed.Build(), ephemeral: true);
     }

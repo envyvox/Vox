@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Vox.Data.Enums;
 using Vox.Services.Discord.Extensions;
@@ -14,16 +13,14 @@ namespace Vox.Services.Discord.Client;
 public class CommandHandler
 {
     private readonly ILogger<CommandHandler> _logger;
-    private readonly IHostEnvironment _env;
 
     private DiscordSocketClient _client;
     private InteractionService _commands;
     private IServiceProvider _services;
 
-    public CommandHandler(ILogger<CommandHandler> logger, IHostEnvironment env)
+    public CommandHandler(ILogger<CommandHandler> logger)
     {
         _logger = logger;
-        _env = env;
     }
 
     public async Task InitializeAsync(DiscordSocketClient discordSocketClient,
@@ -32,10 +29,6 @@ public class CommandHandler
         _client = discordSocketClient;
         _commands = interactionService;
         _services = serviceProvider;
-
-        _commands.LocalizationManager = new JsonLocalizationManager(
-            _env.IsDevelopment() ? "../Vox.Data/Localizations" : "./",
-            "local");
 
         await _commands.AddModulesAsync(typeof(IDiscordClientService).Assembly, _services);
 

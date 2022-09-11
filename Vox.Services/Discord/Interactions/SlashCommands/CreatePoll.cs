@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
@@ -12,8 +11,8 @@ using Vox.Services.Discord.Extensions;
 using Vox.Services.Extensions;
 using Vox.Services.Hangfire.CompletePoll;
 using Vox.Services.Poll.Commands;
+using Vox.Services.Poll.Queries;
 using static Discord.Emote;
-using static Vox.Services.Extensions.ExceptionExtensions;
 using ComponentType = Vox.Data.Enums.ComponentType;
 
 namespace Vox.Services.Discord.Interactions.SlashCommands;
@@ -28,38 +27,71 @@ public class CreatePoll : InteractionModuleBase<SocketInteractionContext>
         _mediator = mediator;
     }
 
-    [SlashCommand("create-poll", "Creates a poll to select the specified answers (max 25)")]
+    [SlashCommand("create-poll", "Creates a poll to select the specified answers (max 20)")]
     public async Task Execute(
         [Summary("type", "Poll type")] ComponentType componentType,
         [Summary("duration", "Poll duration in minutes")] [MinValue(1)]
         int durationInMinutes,
         [Summary("question", "Question for which you would like to collect answers")]
         string question,
-        [Summary("answers", "Answer options separated by commas ,")]
-        string inputAnswers,
+        [Summary("answer1", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer1,
+        [Summary("answer2", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer2,
+        [Summary("answer3", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer3 = null,
+        [Summary("answer4", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer4 = null,
+        [Summary("answer5", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer5 = null,
+        [Summary("answer6", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer6 = null,
+        [Summary("answer7", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer7 = null,
+        [Summary("answer8", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer8 = null,
+        [Summary("answer9", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer9 = null,
+        [Summary("answer10", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer10 = null,
+        [Summary("answer11", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer11 = null,
+        [Summary("answer12", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer12 = null,
+        [Summary("answer13", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer13 = null,
+        [Summary("answer14", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer14 = null,
+        [Summary("answer15", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer15 = null,
+        [Summary("answer16", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer16 = null,
+        [Summary("answer17", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer17 = null,
+        [Summary("answer18", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer18 = null,
+        [Summary("answer19", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer19 = null,
+        [Summary("answer20", "Answer")] [MinLength(1)] [MaxLength(80)]
+        string answer20 = null,
         [Summary("max-answers", "Number of options that can be selected at the same time (default 1)")]
         [MinValue(1), MaxValue(25)]
         int maxAnswers = 1)
     {
         await DeferAsync(true);
 
-        var answers = Regex.Replace(inputAnswers, " *, *", ",")
-            .Split(',')
+        var answers = new[]
+            {
+                answer1, answer2, answer3, answer4, answer5, answer6, answer7, answer8, answer9, answer10, answer11,
+                answer12, answer13, answer14, answer15, answer16, answer17, answer18, answer19, answer20
+            }
+            .Where(x => x is not null && x is not "")
             .Distinct()
             .ToArray();
 
-        if (answers.Length is < 2 or > 25)
-        {
-            throw new ExpectedException(Response.WrongAnswersCount.Parse(Context.Guild.PreferredLocale));
-        }
+        var pollId = await _mediator.Send(new CreatePollCommand(maxAnswers, answers));
+        var pollAnswers = await _mediator.Send(new GetPollAnswersQuery(pollId));
 
-        if (answers.Any(answer => answer.Length > StringExtensions.LabelMaxChars))
-        {
-            throw new ExpectedException(Response.MaxCharsLimitation.Parse(Context.Guild.PreferredLocale,
-                StringExtensions.LabelMaxChars));
-        }
-
-        var pollId = Guid.NewGuid();
         var emotes = DiscordRepository.Emotes;
         var components = new ComponentBuilder();
         var pollEmbed = new EmbedBuilder()
@@ -81,15 +113,16 @@ public class CreatePoll : InteractionModuleBase<SocketInteractionContext>
                 $"{maxAnswers} {Response.Answers.Parse(Context.Guild.PreferredLocale).Localize(Context.Guild.PreferredLocale, maxAnswers)}")
             .WithFooter(Response.PollFooter.Parse(Context.Guild.PreferredLocale));
 
+
         switch (componentType)
         {
             case ComponentType.Buttons:
             {
-                foreach (var answer in answers)
+                foreach (var answer in pollAnswers)
                 {
                     components.WithButton(
-                        answer,
-                        $"poll-answer-button:{pollId},{answer}",
+                        answer.Answer,
+                        $"poll-answer-button:{pollId},{answer.Id}",
                         emote: Parse(emotes.GetEmote("QA")));
                 }
 
@@ -103,9 +136,9 @@ public class CreatePoll : InteractionModuleBase<SocketInteractionContext>
                         Response.SelectAnswersFromDropdown.Parse(Context.Guild.PreferredLocale, maxAnswers))
                     .WithMaxValues(maxAnswers);
 
-                foreach (var answer in answers)
+                foreach (var answer in pollAnswers)
                 {
-                    selectMenu.AddOption(answer, answer, emote: Parse(emotes.GetEmote("QA")));
+                    selectMenu.AddOption(answer.Answer, $"{answer.Id}", emote: Parse(emotes.GetEmote("QA")));
                 }
 
                 components.WithSelectMenu(selectMenu);
@@ -127,8 +160,6 @@ public class CreatePoll : InteractionModuleBase<SocketInteractionContext>
 
         var message = await Context.Channel.SendMessageAsync(embed: pollEmbed.Build(), components: components.Build());
 
-        await _mediator.Send(new CreatePollCommand(
-            pollId, (long) Context.Guild.Id, (long) Context.Channel.Id, (long) message.Id, maxAnswers));
 
         BackgroundJob.Schedule<ICompletePollJob>(
             x => x.Execute(pollId, Context.Guild.Id, Context.Channel.Id, message.Id, question, avatarUrl),

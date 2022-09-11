@@ -10,46 +10,46 @@ using Vox.Data.Extensions;
 
 namespace Vox.Services.Poll.Commands;
 
-public record CreatePollAnswerCommand(long UserId, Guid PollId, string Answer) : IRequest;
+public record CreateUserPollAnswerCommand(long UserId, Guid PollId, Guid AnswerId) : IRequest;
 
-public class CreatePollAnswerHandler : IRequestHandler<CreatePollAnswerCommand>
+public class CreateUserPollAnswerHandler : IRequestHandler<CreateUserPollAnswerCommand>
 {
-    private readonly ILogger<CreatePollAnswerHandler> _logger;
+    private readonly ILogger<CreateUserPollAnswerHandler> _logger;
     private readonly AppDbContext _db;
 
-    public CreatePollAnswerHandler(
+    public CreateUserPollAnswerHandler(
         DbContextOptions options,
-        ILogger<CreatePollAnswerHandler> logger)
+        ILogger<CreateUserPollAnswerHandler> logger)
     {
         _db = new AppDbContext(options);
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(CreatePollAnswerCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(CreateUserPollAnswerCommand request, CancellationToken ct)
     {
-        var exist = await _db.PollAnswers
+        var exist = await _db.UserPollAnswers
             .AnyAsync(x =>
                 x.UserId == request.UserId &&
                 x.PollId == request.PollId &&
-                x.Answer == request.Answer);
+                x.AnswerId == request.AnswerId);
 
         if (exist)
         {
             throw new Exception(
-                $"poll answer entity for user {request.UserId} and poll {request.PollId} with answer {request.Answer} already exist");
+                $"poll answer entity for user {request.UserId} and poll {request.PollId} with answer {request.AnswerId} already exist");
         }
 
-        var created = await _db.CreateEntity(new PollAnswer
+        var created = await _db.CreateEntity(new UserPollAnswer
         {
             Id = Guid.NewGuid(),
             UserId = request.UserId,
             PollId = request.PollId,
-            Answer = request.Answer,
+            AnswerId = request.AnswerId,
             CreatedAt = DateTimeOffset.UtcNow
         });
 
         _logger.LogInformation(
-            "Created poll answer entity {@Entity}",
+            "Created user poll answer entity {@Entity}",
             created);
 
         return Unit.Value;

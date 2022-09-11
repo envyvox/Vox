@@ -5,10 +5,9 @@ using Vox.Data.Entities;
 namespace Vox.Services.Poll.Models;
 
 public record PollAnswerDto(
-    long UserId,
+    Guid Id,
     PollDto Poll,
-    string Answer,
-    DateTimeOffset CreatedAt);
+    string Answer);
 
 public class PollAnswerProfile : Profile
 {

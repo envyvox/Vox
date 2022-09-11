@@ -11,28 +11,26 @@ using Vox.Services.Poll.Models;
 
 namespace Vox.Services.Poll.Queries;
 
-public record GetUserPollAnswersQuery(long UserId, Guid PollId) : IRequest<List<UserPollAnswerDto>>;
+public record GetAllUserPollAnswersQuery(Guid PollId) : IRequest<List<UserPollAnswerDto>>;
 
-public class GetUserPollAnswersHandler : IRequestHandler<GetUserPollAnswersQuery, List<UserPollAnswerDto>>
+public class GetAllUserPollAnswersHandler : IRequestHandler<GetAllUserPollAnswersQuery, List<UserPollAnswerDto>>
 {
     private readonly IMapper _mapper;
     private readonly AppDbContext _db;
 
-    public GetUserPollAnswersHandler(
+    public GetAllUserPollAnswersHandler(
         DbContextOptions options,
         IMapper mapper)
     {
-        _db = new AppDbContext(options);
         _mapper = mapper;
+        _db = new AppDbContext(options);
     }
 
-    public async Task<List<UserPollAnswerDto>> Handle(GetUserPollAnswersQuery request, CancellationToken ct)
+    public async Task<List<UserPollAnswerDto>> Handle(GetAllUserPollAnswersQuery request, CancellationToken ct)
     {
         var entities = await _db.UserPollAnswers
             .Include(x => x.Answer)
-            .Where(x =>
-                x.UserId == request.UserId &&
-                x.PollId == request.PollId)
+            .Where(x => x.PollId == request.PollId)
             .ToListAsync();
 
         return _mapper.Map<List<UserPollAnswerDto>>(entities);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -8,6 +9,7 @@ using Vox.Data.Enums;
 using Vox.Services.Discord.Extensions;
 using Vox.Services.Extensions;
 using Vox.Services.Poll.Commands;
+using Vox.Services.Poll.Models;
 using Vox.Services.Poll.Queries;
 using static Vox.Services.Extensions.ExceptionExtensions;
 
@@ -23,14 +25,23 @@ public class PollAnswerDropdown : InteractionModuleBase<SocketInteractionContext
     }
 
     [ComponentInteraction("poll-answer-dropdown:*")]
-    public async Task Execute(string pollIdString, string[] answers)
+    public async Task Execute(string pollIdString, string[] answersId)
     {
         await DeferAsync(true);
 
         var poll = await _mediator.Send(new GetPollQuery(Guid.Parse(pollIdString)));
+        var pollAnswers = await _mediator.Send(new GetPollAnswersQuery(poll.Id));
         var userAnswers = await _mediator.Send(new GetUserPollAnswersQuery((long) Context.User.Id, poll.Id));
+        var selectedAnswers = (
+                from pollAnswer in pollAnswers
+                from answerId in answersId
+                where pollAnswer.Id == Guid.Parse(answerId)
+                select pollAnswer)
+            .ToList();
 
-        var newAnswerCount = answers.Count(answer => userAnswers.Select(x => x.Answer).Contains(answer) is false);
+        var newAnswerCount = selectedAnswers.Count(pollAnswer => userAnswers
+            .Select(userPollAnswer => userPollAnswer.Answer)
+            .Contains(pollAnswer) is false);
 
         if (userAnswers.Count + newAnswerCount > poll.MaxAnswers)
         {
@@ -38,11 +49,9 @@ public class PollAnswerDropdown : InteractionModuleBase<SocketInteractionContext
                 poll.MaxAnswers));
         }
 
-        foreach (var answer in answers)
+        foreach (var answer in selectedAnswers.Where(answer => !userAnswers.Select(x => x.Answer).Contains(answer)))
         {
-            if (userAnswers.Select(x => x.Answer).Contains(answer)) continue;
-
-            await _mediator.Send(new CreatePollAnswerCommand((long) Context.User.Id, poll.Id, answer));
+            await _mediator.Send(new CreateUserPollAnswerCommand((long) Context.User.Id, poll.Id, answer.Id));
         }
 
         var embed = new EmbedBuilder()
@@ -51,8 +60,8 @@ public class PollAnswerDropdown : InteractionModuleBase<SocketInteractionContext
                 Response.Poll.Parse(Context.Guild.PreferredLocale),
                 Context.User.GetAvatarUrl())
             .WithDescription(Response.PollAnswerDesc.Parse(Context.Guild.PreferredLocale,
-                Context.User.Mention, answers
-                    .Aggregate(string.Empty, (s, v) => s + $"{v}, ")
+                Context.User.Mention, selectedAnswers
+                    .Aggregate(string.Empty, (s, v) => s + $"{v.Answer}, ")
                     .RemoveFromEnd(2)));
 
         await FollowupAsync(embed: embed.Build(), ephemeral: true);

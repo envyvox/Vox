@@ -31,7 +31,7 @@ public class CompletePollJob : ICompletePollJob
         string avatarUrl)
     {
         var poll = await _mediator.Send(new GetPollQuery(pollId));
-        var pollAnswers = await _mediator.Send(new GetPollAnswersQuery(poll.Id));
+        var pollAnswers = await _mediator.Send(new GetAllUserPollAnswersQuery(poll.Id));
         var client = await _discordClientService.GetSocketClient();
         var guild = client.GetGuild(guildId);
 
@@ -56,7 +56,7 @@ public class CompletePollJob : ICompletePollJob
                     emotes.GetEmote("QA")),
                 answers.Aggregate(string.Empty, (s, v) =>
                     s +
-                    $"`{v.Count} {Response.Answers.Parse(guild.PreferredLocale).Localize(guild.PreferredLocale, v.Count)}`: {v.Key}\n"));
+                    $"`{v.Count} {Response.Answers.Parse(guild.PreferredLocale).Localize(guild.PreferredLocale, v.Count)}`: {v.Key.Answer}\n"));
 
         var message = await _mediator.Send(new GetUserMessageQuery(guildId, channelId, messageId));
 

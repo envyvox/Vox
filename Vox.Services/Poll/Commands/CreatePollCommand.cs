@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -9,49 +10,39 @@ using Vox.Data.Extensions;
 
 namespace Vox.Services.Poll.Commands;
 
-public record CreatePollCommand(Guid Id, long GuildId, long ChannelId, long MessageId, int MaxAnswers) : IRequest;
+public record CreatePollCommand(int MaxAnswers, IEnumerable<string> Answers) : IRequest<Guid>;
 
-public class CreatePollHandler : IRequestHandler<CreatePollCommand>
+public class CreatePollHandler : IRequestHandler<CreatePollCommand, Guid>
 {
     private readonly ILogger<CreatePollHandler> _logger;
+    private readonly IMediator _mediator;
     private readonly AppDbContext _db;
 
     public CreatePollHandler(
         DbContextOptions options,
-        ILogger<CreatePollHandler> logger)
+        ILogger<CreatePollHandler> logger,
+        IMediator mediator)
     {
         _db = new AppDbContext(options);
         _logger = logger;
+        _mediator = mediator;
     }
 
-    public async Task<Unit> Handle(CreatePollCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreatePollCommand request, CancellationToken ct)
     {
-        var exist = await _db.Polls
-            .AnyAsync(x =>
-                x.GuildId == request.GuildId &&
-                x.ChannelId == request.ChannelId &&
-                x.MessageId == request.MessageId);
-
-        if (exist)
-        {
-            throw new Exception(
-                $"poll entity with guild {request.GuildId}, channel {request.ChannelId} and message {request.MessageId} already exist");
-        }
-
         var created = await _db.CreateEntity(new Data.Entities.Poll
         {
-            Id = request.Id,
-            GuildId = request.GuildId,
-            ChannelId = request.ChannelId,
-            MessageId = request.MessageId,
+            Id = Guid.NewGuid(),
             MaxAnswers = request.MaxAnswers,
             CreatedAt = DateTimeOffset.UtcNow
         });
+
+        await _mediator.Send(new CreatePollAnswersCommand(created.Id, request.Answers));
 
         _logger.LogInformation(
             "Created poll entity {@Entity}",
             created);
 
-        return Unit.Value;
+        return created.Id;
     }
 }
