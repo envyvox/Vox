@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Entities;
@@ -14,20 +15,23 @@ public record CreateUserPollAnswerCommand(long UserId, Guid PollId, Guid AnswerI
 
 public class CreateUserPollAnswerHandler : IRequestHandler<CreateUserPollAnswerCommand>
 {
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CreateUserPollAnswerHandler> _logger;
-    private readonly AppDbContext _db;
 
     public CreateUserPollAnswerHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         ILogger<CreateUserPollAnswerHandler> logger)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(CreateUserPollAnswerCommand request, CancellationToken ct)
     {
-        var exist = await _db.UserPollAnswers
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var exist = await db.UserPollAnswers
             .AnyAsync(x =>
                 x.UserId == request.UserId &&
                 x.PollId == request.PollId &&
@@ -39,7 +43,7 @@ public class CreateUserPollAnswerHandler : IRequestHandler<CreateUserPollAnswerC
                 $"poll answer entity for user {request.UserId} and poll {request.PollId} with answer {request.AnswerId} already exist");
         }
 
-        var created = await _db.CreateEntity(new UserPollAnswer
+        var created = await db.CreateEntity(new UserPollAnswer
         {
             Id = Guid.NewGuid(),
             UserId = request.UserId,

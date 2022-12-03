@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Extensions;
@@ -13,20 +14,24 @@ public record DeletePollCommand(Guid PollId) : IRequest;
 
 public class DeletePollHandler : IRequestHandler<DeletePollCommand>
 {
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<DeletePollHandler> _logger;
-    private readonly AppDbContext _db;
+
 
     public DeletePollHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         ILogger<DeletePollHandler> logger)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(DeletePollCommand request, CancellationToken ct)
     {
-        var entity = await _db.Polls
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var entity = await db.Polls
             .SingleOrDefaultAsync(x => x.Id == request.PollId);
 
         if (entity is null)
@@ -35,7 +40,7 @@ public class DeletePollHandler : IRequestHandler<DeletePollCommand>
                 $"poll {request.PollId} not found in database");
         }
 
-        await _db.DeleteEntity(entity);
+        await db.DeleteEntity(entity);
 
         _logger.LogInformation(
             "Deleted poll entity {@Entity}",

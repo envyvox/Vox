@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Extensions;
@@ -13,20 +14,23 @@ public record CreateGuildCreateChannelCommand(long GuildId, long CategoryId, lon
 
 public class CreateGuildCreateChannelHandler : IRequestHandler<CreateGuildCreateChannelCommand>
 {
-    private readonly AppDbContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CreateGuildCreateChannelHandler> _logger;
 
     public CreateGuildCreateChannelHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         ILogger<CreateGuildCreateChannelHandler> logger)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(CreateGuildCreateChannelCommand request, CancellationToken ct)
     {
-        var exist = await _db.GuildCreateChannels
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var exist = await db.GuildCreateChannels
             .AnyAsync(x =>
                 x.GuildId == request.GuildId &&
                 x.CategoryId == request.CategoryId);
@@ -37,7 +41,7 @@ public class CreateGuildCreateChannelHandler : IRequestHandler<CreateGuildCreate
                 $"guild {request.GuildId} already have create channel in category {request.CategoryId}");
         }
 
-        var created = await _db.CreateEntity(new Data.Entities.GuildCreateChannel
+        var created = await db.CreateEntity(new Data.Entities.GuildCreateChannel
         {
             Id = Guid.NewGuid(),
             GuildId = request.GuildId,

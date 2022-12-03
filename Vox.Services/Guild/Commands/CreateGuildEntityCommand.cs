@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Extensions;
@@ -15,23 +16,26 @@ public record CreateGuildEntityCommand(long Id) : IRequest<GuildDto>;
 
 public class CreateGuildEntityHandler : IRequestHandler<CreateGuildEntityCommand, GuildDto>
 {
-    private readonly AppDbContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IMapper _mapper;
     private readonly ILogger<CreateGuildEntityHandler> _logger;
 
     public CreateGuildEntityHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         IMapper mapper,
         ILogger<CreateGuildEntityHandler> logger)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _mapper = mapper;
         _logger = logger;
     }
 
     public async Task<GuildDto> Handle(CreateGuildEntityCommand request, CancellationToken ct)
     {
-        var exist = await _db.Guilds
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var exist = await db.Guilds
             .AnyAsync(x => x.Id == request.Id);
 
         if (exist)
@@ -40,7 +44,7 @@ public class CreateGuildEntityHandler : IRequestHandler<CreateGuildEntityCommand
                 $"guild with id {request.Id} already exist in database");
         }
 
-        var created = await _db.CreateEntity(new Data.Entities.Guild
+        var created = await db.CreateEntity(new Data.Entities.Guild
         {
             Id = request.Id,
             CreateRoomLimit = 0,

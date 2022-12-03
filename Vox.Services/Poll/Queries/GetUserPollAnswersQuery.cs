@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Vox.Data;
 using Vox.Services.Poll.Models;
 
@@ -15,20 +16,24 @@ public record GetUserPollAnswersQuery(long UserId, Guid PollId) : IRequest<List<
 
 public class GetUserPollAnswersHandler : IRequestHandler<GetUserPollAnswersQuery, List<UserPollAnswerDto>>
 {
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IMapper _mapper;
-    private readonly AppDbContext _db;
+
 
     public GetUserPollAnswersHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         IMapper mapper)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _mapper = mapper;
     }
 
     public async Task<List<UserPollAnswerDto>> Handle(GetUserPollAnswersQuery request, CancellationToken ct)
     {
-        var entities = await _db.UserPollAnswers
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var entities = await db.UserPollAnswers
             .Include(x => x.Answer)
             .Where(x =>
                 x.UserId == request.UserId &&

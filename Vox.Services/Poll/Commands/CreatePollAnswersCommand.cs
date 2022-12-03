@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Entities;
@@ -17,22 +17,25 @@ public record CreatePollAnswersCommand(Guid PollId, IEnumerable<string> Answers)
 
 public class CreatePollAnswersHandler : IRequestHandler<CreatePollAnswersCommand>
 {
-    private readonly AppDbContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CreatePollAnswersHandler> _logger;
 
     public CreatePollAnswersHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         ILogger<CreatePollAnswersHandler> logger)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(CreatePollAnswersCommand request, CancellationToken cancellationToken)
     {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
         foreach (var answer in request.Answers)
         {
-            var exist = _db.PollAnswers.Any(x =>
+            var exist = db.PollAnswers.Any(x =>
                 x.PollId == request.PollId &&
                 x.Answer == answer);
 
@@ -42,7 +45,7 @@ public class CreatePollAnswersHandler : IRequestHandler<CreatePollAnswersCommand
                     $"poll {request.PollId} answer {answer} already exist");
             }
 
-            var created = await _db.CreateEntity(new PollAnswer
+            var created = await db.CreateEntity(new PollAnswer
             {
                 Id = Guid.NewGuid(),
                 PollId = request.PollId,

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Extensions;
@@ -13,20 +14,23 @@ public record DeleteGuildCreateChannelCommand(long GuildId, long CategoryId) : I
 
 public class DeleteGuildCreateChannelHandler : IRequestHandler<DeleteGuildCreateChannelCommand>
 {
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<DeleteGuildCreateChannelHandler> _logger;
-    private readonly AppDbContext _db;
 
     public DeleteGuildCreateChannelHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         ILogger<DeleteGuildCreateChannelHandler> logger)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(DeleteGuildCreateChannelCommand request, CancellationToken ct)
     {
-        var entity = await _db.GuildCreateChannels
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var entity = await db.GuildCreateChannels
             .SingleOrDefaultAsync(x =>
                 x.GuildId == request.GuildId &&
                 x.CategoryId == request.CategoryId);
@@ -37,7 +41,7 @@ public class DeleteGuildCreateChannelHandler : IRequestHandler<DeleteGuildCreate
                 $"guild {request.GuildId} doesnt have created channel category {request.CategoryId} in database");
         }
 
-        await _db.DeleteEntity(entity);
+        await db.DeleteEntity(entity);
 
         _logger.LogInformation(
             "Deleted guild create channel entity {@Entity}",

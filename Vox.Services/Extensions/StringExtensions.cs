@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Vox.Data.Enums;
-using static Vox.Services.Extensions.ExceptionExtensions;
 
 namespace Vox.Services.Extensions;
 
@@ -9,8 +8,6 @@ public static class StringExtensions
 {
     /// <summary> Unicode Character “⠀” (U+2800) </summary>
     public const string EmptyChar = "⠀";
-
-    public const int LabelMaxChars = 80;
 
     public const string PageImageUrl =
         "https://cdn.discordapp.com/attachments/955683860287479858/955690421168799825/document.png";

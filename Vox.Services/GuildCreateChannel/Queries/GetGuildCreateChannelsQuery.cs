@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Vox.Data;
 using Vox.Services.GuildCreateChannel.Models;
 
@@ -14,20 +15,23 @@ public record GetGuildCreateChannelsQuery(long GuildId) : IRequest<List<GuildCre
 
 public class GetGuildCreateChannelsHandler : IRequestHandler<GetGuildCreateChannelsQuery, List<GuildCreateChannelDto>>
 {
-    private readonly AppDbContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IMapper _mapper;
 
     public GetGuildCreateChannelsHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         IMapper mapper)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _mapper = mapper;
     }
 
     public async Task<List<GuildCreateChannelDto>> Handle(GetGuildCreateChannelsQuery request, CancellationToken ct)
     {
-        var entities = await _db.GuildCreateChannels
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var entities = await db.GuildCreateChannels
             .Include(x => x.Guild)
             .Where(x => x.GuildId == request.GuildId)
             .ToListAsync();

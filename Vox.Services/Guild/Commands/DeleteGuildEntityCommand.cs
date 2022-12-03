@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Extensions;
@@ -13,20 +14,23 @@ public record DeleteGuildEntityCommand(long Id) : IRequest;
 
 public class DeleteGuildEntityHandler : IRequestHandler<DeleteGuildEntityCommand>
 {
-    private readonly AppDbContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<DeleteGuildEntityHandler> _logger;
 
     public DeleteGuildEntityHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         ILogger<DeleteGuildEntityHandler> logger)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(DeleteGuildEntityCommand request, CancellationToken ct)
     {
-        var entity = await _db.Guilds
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var entity = await db.Guilds
             .FirstOrDefaultAsync(x => x.Id == request.Id);
 
         if (entity is null)
@@ -35,7 +39,7 @@ public class DeleteGuildEntityHandler : IRequestHandler<DeleteGuildEntityCommand
                 $"Guild with id {request.Id} not exist in database");
         }
 
-        await _db.DeleteEntity(entity);
+        await db.DeleteEntity(entity);
 
         _logger.LogInformation(
             "Deleted guild entity {@Entity}",

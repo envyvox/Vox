@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -9,7 +8,6 @@ using Vox.Data.Enums;
 using Vox.Services.Discord.Extensions;
 using Vox.Services.Extensions;
 using Vox.Services.Poll.Commands;
-using Vox.Services.Poll.Models;
 using Vox.Services.Poll.Queries;
 using static Vox.Services.Extensions.ExceptionExtensions;
 

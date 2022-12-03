@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vox.Data;
 using Vox.Data.Extensions;
@@ -14,23 +14,26 @@ public record CreatePollCommand(int MaxAnswers, IEnumerable<string> Answers) : I
 
 public class CreatePollHandler : IRequestHandler<CreatePollCommand, Guid>
 {
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CreatePollHandler> _logger;
     private readonly IMediator _mediator;
-    private readonly AppDbContext _db;
 
     public CreatePollHandler(
-        DbContextOptions options,
+        IServiceScopeFactory scopeFactory,
         ILogger<CreatePollHandler> logger,
         IMediator mediator)
     {
-        _db = new AppDbContext(options);
+        _scopeFactory = scopeFactory;
         _logger = logger;
         _mediator = mediator;
     }
 
     public async Task<Guid> Handle(CreatePollCommand request, CancellationToken ct)
     {
-        var created = await _db.CreateEntity(new Data.Entities.Poll
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var created = await db.CreateEntity(new Data.Entities.Poll
         {
             Id = Guid.NewGuid(),
             MaxAnswers = request.MaxAnswers,

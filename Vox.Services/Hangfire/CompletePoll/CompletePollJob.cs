@@ -3,8 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Vox.Data.Enums;
-using Vox.Services.Discord.Client;
 using Vox.Services.Discord.Emote.Extensions;
 using Vox.Services.Discord.Extensions;
 using Vox.Services.Discord.Guild.Queries;
@@ -17,23 +17,29 @@ namespace Vox.Services.Hangfire.CompletePoll;
 public class CompletePollJob : ICompletePollJob
 {
     private readonly IMediator _mediator;
-    private readonly IDiscordClientService _discordClientService;
+    private readonly ILogger<CompletePollJob> _logger;
 
-    public CompletePollJob(
-        IMediator mediator,
-        IDiscordClientService discordClientService)
+    public CompletePollJob(IMediator mediator, ILogger<CompletePollJob> logger)
     {
         _mediator = mediator;
-        _discordClientService = discordClientService;
+        _logger = logger;
     }
 
     public async Task Execute(Guid pollId, ulong guildId, ulong channelId, ulong messageId, string question,
         string avatarUrl)
     {
+        var message = await _mediator.Send(new GetUserMessageQuery(guildId, channelId, messageId));
+        if (message is null)
+        {
+            _logger.LogError(
+                "Cannot find message {MessageId} in guild {GuildId} channel {ChannelId} while executing complete poll job for poll {PollId}",
+                messageId, guildId, channelId, pollId);
+            return;
+        }
+
         var poll = await _mediator.Send(new GetPollQuery(pollId));
         var pollAnswers = await _mediator.Send(new GetAllUserPollAnswersQuery(poll.Id));
-        var client = await _discordClientService.GetSocketClient();
-        var guild = client.GetGuild(guildId);
+        var guild = await _mediator.Send(new GetSocketGuildQuery(guildId));
 
         // count each answer
         var answers = pollAnswers
@@ -58,8 +64,6 @@ public class CompletePollJob : ICompletePollJob
                     s +
                     $"`{v.Count} {Response.Answers.Parse(guild.PreferredLocale).Localize(guild.PreferredLocale, v.Count)}`: {v.Key.Answer}\n"));
 
-        var message = await _mediator.Send(new GetUserMessageQuery(guildId, channelId, messageId));
-
         await message.ModifyAsync(x =>
         {
             x.Embed = embed.Build();
@@ -67,5 +71,9 @@ public class CompletePollJob : ICompletePollJob
         });
 
         await _mediator.Send(new DeletePollCommand(poll.Id));
+
+        _logger.LogInformation(
+            "Complete poll job for poll {PollId} executed successfully and poll deleted",
+            pollId);
     }
 }
