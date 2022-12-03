@@ -313,8 +313,10 @@ public static class ResponseHelper
             },
             Response.SettingsCreateChannelDesc => language switch
             {
-                Language.English => ".",
-                Language.Russian => ".",
+                Language.English => 
+                    "{0}, here you can create or delete a category with created channels, to do this, use the **buttons** under this message.",
+                Language.Russian => 
+                    "{0}, тут вы можете создать или удалить категорию с создаваемыми каналами, для этого воспользуйтесь **кнопками** под этим сообщением.",
                 _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
             },
             Response.SettingsCreateChannelFieldDesc => language switch

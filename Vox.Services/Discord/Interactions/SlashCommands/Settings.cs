@@ -37,7 +37,8 @@ public class Settings : InteractionModuleBase<SocketInteractionContext>
             .WithAuthor(
                 Response.SettingsCreateChannels.Parse(Context.Guild.PreferredLocale),
                 Context.User.GetAvatarUrl())
-            .WithDescription(Response.SettingsCreateChannelDesc.Parse(Context.Guild.PreferredLocale));
+            .WithDescription(Response.SettingsCreateChannelDesc.Parse(Context.Guild.PreferredLocale,
+                Context.User.Mention));
 
         if (guildCreateChannels.Any())
         {

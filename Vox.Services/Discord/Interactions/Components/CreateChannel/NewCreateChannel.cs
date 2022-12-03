@@ -52,6 +52,10 @@ public class NewCreateChannel : InteractionModuleBase<SocketInteractionContext>
                 Response.NewCreateChannelDesc.Parse(Context.Guild.PreferredLocale,
                     Context.User.Mention, channel.Mention, emotes.GetEmote("Text"), emotes.GetEmote("ID")));
 
-        await FollowupAsync(embed: embed.Build(), ephemeral: true);
+        await ModifyOriginalResponseAsync(x =>
+        {
+            x.Embed = embed.Build();
+            x.Components = new ComponentBuilder().Build();
+        });
     }
 }
