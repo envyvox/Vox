@@ -239,8 +239,8 @@ public static class ResponseHelper
             },
             Response.GuildRoleInfo => language switch
             {
-                Language.English => "`{0}` {1}:\n{{ {2} color: {3}, {4} members count: {4} {5} {6}, {7} {8} {9} }}\n\n",
-                Language.Russian => "`{0}` {1}:\n{{ {2} цвет: {3}, {4} количество: {4} {5} {6}, {7} {8} {9} }}\n\n",
+                Language.English => "`{0}` {1}:\n{{ {2} color: {3}, {4} {5} {6}, {7} {8} {9} }}\n\n",
+                Language.Russian => "`{0}` {1}:\n{{ {2} цвет: {3}, {4} {5} {6}, {7} {8} {9} }}\n\n",
                 _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
             },
             Response.Bot => language switch

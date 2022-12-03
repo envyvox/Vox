@@ -18,8 +18,4 @@
       <ProjectReference Include="..\Vox.Data\Vox.Data.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Discord\Interactions\Attributes" />
-    </ItemGroup>
-
 </Project>
