@@ -35,7 +35,7 @@ public class OnReadyHandler : IRequestHandler<OnReady>
         _env = env;
     }
 
-    public async Task<Unit> Handle(OnReady request, CancellationToken cancellationToken)
+    public async Task Handle(OnReady request, CancellationToken cancellationToken)
     {
         try
         {
@@ -66,7 +66,5 @@ public class OnReadyHandler : IRequestHandler<OnReady>
 
             _lifetime.StopApplication();
         }
-
-        return new Unit();
     }
 }

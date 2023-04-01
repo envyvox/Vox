@@ -29,7 +29,7 @@ namespace Vox.Services.Discord.Emote.Commands
             _options = options.Value;
         }
 
-        public async Task<Unit> Handle(SyncEmotesCommand request, CancellationToken ct)
+        public async Task Handle(SyncEmotesCommand request, CancellationToken ct)
         {
             var socketClient = await _discordClientService.GetSocketClient();
             var emotes = DiscordRepository.Emotes;
@@ -47,8 +47,6 @@ namespace Vox.Services.Discord.Emote.Commands
 
             _logger.LogInformation(
                 "Emotes sync completed");
-
-            return Unit.Value;
         }
     }
 }

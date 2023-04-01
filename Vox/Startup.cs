@@ -2,7 +2,6 @@
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
-using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -41,12 +40,12 @@ public class Startup
         services.AddHangfireServer();
         services.AddHangfire(config =>
         {
-            GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute {Attempts = 0});
+            GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute { Attempts = 0 });
             config.UsePostgreSqlStorage(_config.GetConnectionString("main"));
         });
 
         services.AddAutoMapper(typeof(IDiscordClientService).Assembly);
-        services.AddMediatR(typeof(IDiscordClientService).Assembly);
+        services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(IDiscordClientService).Assembly));
         services.AddMemoryCache();
 
         services
@@ -77,7 +76,7 @@ public class Startup
 
         app.UseHangfireDashboard("/hangfire", new DashboardOptions
         {
-            Authorization = new[] {new AllowAllAuthorizationFilter()}
+            Authorization = new[] { new AllowAllAuthorizationFilter() }
         });
 
         app.UseSerilogRequestLogging();

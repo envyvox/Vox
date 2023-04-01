@@ -24,7 +24,7 @@ public class OnUserVoiceStateUpdatedHandler : IRequestHandler<OnUserVoiceStateUp
         _mediator = mediator;
     }
 
-    public async Task<Unit> Handle(OnUserVoiceStateUpdated request, CancellationToken ct)
+    public async Task Handle(OnUserVoiceStateUpdated request, CancellationToken ct)
     {
         var oldChannel = request.OldSocketVoiceState.VoiceChannel;
         var newChannel = request.NewSocketVoiceState.VoiceChannel;
@@ -32,7 +32,7 @@ public class OnUserVoiceStateUpdatedHandler : IRequestHandler<OnUserVoiceStateUp
         var guild = await _mediator.Send(new GetGuildEntityQuery((long) socketGuild.Id));
         var guildCreateChannels = await _mediator.Send(new GetGuildCreateChannelsQuery(guild.Id));
 
-        if (guildCreateChannels.Count < 1) return Unit.Value;
+        if (guildCreateChannels.Count < 1) return;
 
         if (newChannel is not null &&
             guildCreateChannels
@@ -68,7 +68,5 @@ public class OnUserVoiceStateUpdatedHandler : IRequestHandler<OnUserVoiceStateUp
         {
             await oldChannel.DeleteAsync();
         }
-
-        return Unit.Value;
     }
 }

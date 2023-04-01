@@ -17,10 +17,8 @@ public class OnLeftGuildHandler : IRequestHandler<OnLeftGuild>
         _mediator = mediator;
     }
 
-    public async Task<Unit> Handle(OnLeftGuild request, CancellationToken cancellationToken)
+    public async Task Handle(OnLeftGuild request, CancellationToken cancellationToken)
     {
         await _mediator.Send(new DeleteGuildEntityCommand((long) request.SocketGuild.Id));
-
-        return Unit.Value;
     }
 }

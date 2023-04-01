@@ -25,7 +25,7 @@ public class DeleteGuildEntityHandler : IRequestHandler<DeleteGuildEntityCommand
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(DeleteGuildEntityCommand request, CancellationToken ct)
+    public async Task Handle(DeleteGuildEntityCommand request, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -44,7 +44,5 @@ public class DeleteGuildEntityHandler : IRequestHandler<DeleteGuildEntityCommand
         _logger.LogInformation(
             "Deleted guild entity {@Entity}",
             entity);
-
-        return Unit.Value;
     }
 }

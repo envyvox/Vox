@@ -25,7 +25,7 @@ public class CreateGuildCreateChannelHandler : IRequestHandler<CreateGuildCreate
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(CreateGuildCreateChannelCommand request, CancellationToken ct)
+    public async Task Handle(CreateGuildCreateChannelCommand request, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -53,7 +53,5 @@ public class CreateGuildCreateChannelHandler : IRequestHandler<CreateGuildCreate
         _logger.LogInformation(
             "Created guild create channel entity {@Entity}",
             created);
-
-        return Unit.Value;
     }
 }

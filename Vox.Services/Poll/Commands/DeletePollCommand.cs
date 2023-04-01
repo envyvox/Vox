@@ -26,7 +26,7 @@ public class DeletePollHandler : IRequestHandler<DeletePollCommand>
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(DeletePollCommand request, CancellationToken ct)
+    public async Task Handle(DeletePollCommand request, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -45,7 +45,5 @@ public class DeletePollHandler : IRequestHandler<DeletePollCommand>
         _logger.LogInformation(
             "Deleted poll entity {@Entity}",
             entity);
-
-        return Unit.Value;
     }
 }

@@ -26,7 +26,7 @@ public class UpdateGuildCreateRoomLimitHandler : IRequestHandler<UpdateGuildCrea
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(UpdateGuildCreateRoomLimitCommand request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateGuildCreateRoomLimitCommand request, CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -48,7 +48,5 @@ public class UpdateGuildCreateRoomLimitHandler : IRequestHandler<UpdateGuildCrea
         _logger.LogInformation(
             "Updated guild {GuildId} create room limit to {CreateRoomLimit}",
             request.GuildId, request.CreateRoomLimit);
-
-        return Unit.Value;
     }
 }

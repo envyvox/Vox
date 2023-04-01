@@ -18,7 +18,7 @@ public class OnLogHandler : IRequestHandler<OnLog>
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(OnLog request, CancellationToken ct)
+    public Task Handle(OnLog request, CancellationToken ct)
     {
         switch (request.LogMessage.Severity)
         {
@@ -44,6 +44,6 @@ public class OnLogHandler : IRequestHandler<OnLog>
                 throw new ArgumentOutOfRangeException();
         }
 
-        return await Task.FromResult(Unit.Value);
+        return Task.CompletedTask;
     }
 }

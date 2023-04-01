@@ -28,7 +28,7 @@ public class CreatePollAnswersHandler : IRequestHandler<CreatePollAnswersCommand
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(CreatePollAnswersCommand request, CancellationToken cancellationToken)
+    public async Task Handle(CreatePollAnswersCommand request, CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -56,7 +56,5 @@ public class CreatePollAnswersHandler : IRequestHandler<CreatePollAnswersCommand
                 "Created poll answer entity {@Entity}",
                 created);
         }
-
-        return Unit.Value;
     }
 }

@@ -17,10 +17,8 @@ public class OnJoinedGuildHandler : IRequestHandler<OnJoinedGuild>
         _mediator = mediator;
     }
 
-    public async Task<Unit> Handle(OnJoinedGuild request, CancellationToken ct)
+    public async Task Handle(OnJoinedGuild request, CancellationToken ct)
     {
         await _mediator.Send(new CreateGuildEntityCommand((long) request.SocketGuild.Id));
-
-        return Unit.Value;
     }
 }
