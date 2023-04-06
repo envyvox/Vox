@@ -1,11 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Vox.Data.Enums;
-using Vox.Services.Discord.Emote.Extensions;
-using Vox.Services.Discord.Extensions;
-using Vox.Services.Extensions;
+using Vox.Services.Discord.Client;
+using Vox.Services.Discord.Client.Extensions;
+using Vox.Services.Discord.Embed;
+using Vox.Services.Discord.Emotes;
 using static Discord.Emote;
 
 namespace Vox.Services.Discord.Interactions.SlashCommands.View;
@@ -20,7 +22,7 @@ public class ViewGuild : InteractionModuleBase<SocketInteractionContext>
         // make sure all guild users are cached
         await Context.Guild.DownloadUsersAsync();
 
-        var emotes = DiscordRepository.Emotes;
+        var emotes = EmoteRepository.Emotes;
         var embed = new EmbedBuilder()
             .WithDefaultColor()
             .WithThumbnailUrl($"https://cdn.discordapp.com/icons/{Context.Guild.Id}/{Context.Guild.IconId}.png")

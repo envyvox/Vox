@@ -2,13 +2,12 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
-using MediatR;
 using Vox.Data.Enums;
-using Vox.Services.Discord.Emote.Extensions;
-using Vox.Services.Discord.Extensions;
-using Vox.Services.Extensions;
-using Vox.Services.Guild.Commands;
-using Vox.Services.GuildCreateChannel.Queries;
+using Vox.Services.CreateChannels;
+using Vox.Services.Discord.Client;
+using Vox.Services.Discord.Client.Extensions;
+using Vox.Services.Discord.Embed;
+using Vox.Services.Discord.Emotes;
 using static Discord.Emote;
 
 namespace Vox.Services.Discord.Interactions.SlashCommands;
@@ -17,11 +16,12 @@ namespace Vox.Services.Discord.Interactions.SlashCommands;
 [Group("settings", "Bot settings")]
 public class Settings : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly IMediator _mediator;
+    private readonly ICreateChannelRepository _createChannelRepository;
 
-    public Settings(IMediator mediator)
+    /// <inheritdoc />
+    public Settings(ICreateChannelRepository createChannelRepository)
     {
-        _mediator = mediator;
+        _createChannelRepository = createChannelRepository;
     }
 
     [SlashCommand("create-channels", "Manage created channels")]
@@ -29,9 +29,9 @@ public class Settings : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync(true);
 
-        var guildCreateChannels = await _mediator.Send(new GetGuildCreateChannelsQuery((long) Context.Guild.Id));
+        var guildCreateChannels = await _createChannelRepository.List((long) Context.Guild.Id);
 
-        var emotes = DiscordRepository.Emotes;
+        var emotes = EmoteRepository.Emotes;
         var embed = new EmbedBuilder()
             .WithDefaultColor()
             .WithAuthor(
@@ -69,26 +69,5 @@ public class Settings : InteractionModuleBase<SocketInteractionContext>
                 disabled: guildCreateChannels.Any() is false);
 
         await FollowupAsync(embed: embed.Build(), components: components.Build());
-    }
-
-    [SlashCommand("create-channels-limit", "Manage created channels user limit")]
-    public async Task CreateChannelsLimitTask(
-        [Summary("number", "Number of users that can connect to created channel by default")] [MaxValue(99)]
-        int limit)
-    {
-        await DeferAsync(true);
-
-        await _mediator.Send(new UpdateGuildCreateRoomLimitCommand((long) Context.Guild.Id, limit));
-
-        var embed = new EmbedBuilder()
-            .WithDefaultColor()
-            .WithAuthor(
-                Response.SettingsCreateChannelsLimit.Parse(Context.Guild.PreferredLocale),
-                Context.User.GetAvatarUrl())
-            .WithDescription(
-                Response.SettingsCreateChannelsLimitDesc.Parse(Context.Guild.PreferredLocale,
-                    Context.User.Mention, limit));
-
-        await FollowupAsync(embed: embed.Build());
     }
 }

@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Vox.Data.Enums;
-using Vox.Services.Discord.Extensions;
-using Vox.Services.Extensions;
-using static Vox.Services.Extensions.ExceptionExtensions;
+using Vox.Services.Discord.Client;
+using Vox.Services.Discord.Client.Extensions;
+using Vox.Services.Discord.Embed;
+using static Vox.Services.Discord.Client.Extensions.ExceptionExtensions;
 using ComponentType = Vox.Data.Enums.ComponentType;
 
 namespace Vox.Services.Discord.Interactions.SlashCommands;
@@ -36,7 +37,7 @@ public class CreateRolePicker : InteractionModuleBase<SocketInteractionContext>
 
         if (roles.Count is < 1 or > 25)
         {
-            throw new ExpectedException(Response.WrongRolesCount.Parse(Context.Guild.PreferredLocale));
+            throw new ExceptionExtensions.ExpectedException(Response.WrongRolesCount.Parse(Context.Guild.PreferredLocale));
         }
 
         var components = new ComponentBuilder();

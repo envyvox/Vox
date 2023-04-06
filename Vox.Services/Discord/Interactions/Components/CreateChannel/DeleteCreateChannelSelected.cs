@@ -2,20 +2,20 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
-using MediatR;
 using Vox.Data.Enums;
-using Vox.Services.Discord.Extensions;
-using Vox.Services.GuildCreateChannel.Commands;
+using Vox.Services.CreateChannels;
+using Vox.Services.Discord.Embed;
 
 namespace Vox.Services.Discord.Interactions.Components.CreateChannel;
 
 public class DeleteCreateChannelSelected : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly IMediator _mediator;
+    private readonly ICreateChannelRepository _createChannelRepository;
 
-    public DeleteCreateChannelSelected(IMediator mediator)
+    /// <inheritdoc />
+    public DeleteCreateChannelSelected(ICreateChannelRepository createChannelRepository)
     {
-        _mediator = mediator;
+        _createChannelRepository = createChannelRepository;
     }
 
     [ComponentInteraction("delete-create-channel-selected")]
@@ -31,9 +31,7 @@ public class DeleteCreateChannelSelected : InteractionModuleBase<SocketInteracti
 
             await channel.DeleteAsync();
             await category.DeleteAsync();
-
-            await _mediator.Send(new DeleteGuildCreateChannelCommand(
-                (long) Context.Guild.Id, (long) category.Id));
+            await _createChannelRepository.Delete((long) Context.Guild.Id, (long) category.Id);
         }
 
         var embed = new EmbedBuilder()

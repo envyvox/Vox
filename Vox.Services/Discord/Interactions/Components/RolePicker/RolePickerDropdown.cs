@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Vox.Data.Enums;
-using Vox.Services.Extensions;
+using Vox.Services.Discord.Client;
+using Vox.Services.Discord.Client.Extensions;
 
 namespace Vox.Services.Discord.Interactions.Components.RolePicker;
 
