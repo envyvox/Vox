@@ -1,23 +1,24 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
+using MediatR;
 using Vox.Data.Enums;
-using Vox.Services.CreateChannels;
-using Vox.Services.Discord.Client;
-using Vox.Services.Discord.Client.Extensions;
-using Vox.Services.Discord.Embed;
-using Vox.Services.Discord.Emotes;
+using Vox.Services.Discord.Emote.Extensions;
+using Vox.Services.Discord.Extensions;
+using Vox.Services.Extensions;
+using Vox.Services.GuildCreateChannel.Commands;
+using Vox.Services.GuildCreateChannel.Queries;
+using static Vox.Services.Extensions.ExceptionExtensions;
 
 namespace Vox.Services.Discord.Interactions.Components.CreateChannel;
 
 public class NewCreateChannel : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly ICreateChannelRepository _createChannelRepository;
+    private readonly IMediator _mediator;
 
-    public NewCreateChannel(ICreateChannelRepository createChannelRepository)
+    public NewCreateChannel(IMediator mediator)
     {
-        _createChannelRepository = createChannelRepository;
+        _mediator = mediator;
     }
 
     [ComponentInteraction("new-create-channel")]
@@ -25,26 +26,22 @@ public class NewCreateChannel : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync(true);
 
-        var emotes = EmoteRepository.Emotes;
+        var emotes = DiscordRepository.Emotes;
         var category = await Context.Guild.CreateCategoryChannelAsync(
             Response.NewCreatedChannelCategoryName.Parse(Context.Guild.PreferredLocale));
         var channel = await Context.Guild.CreateVoiceChannelAsync(
             Response.NewCreatedChannelName.Parse(Context.Guild.PreferredLocale),
             x => x.CategoryId = category.Id);
 
-        var guildCreateChannels = await _createChannelRepository.List((long) Context.Guild.Id);
+        var guildCreateChannels = await _mediator.Send(new GetGuildCreateChannelsQuery((long) Context.Guild.Id));
 
         if (guildCreateChannels.Count >= 3)
         {
-            throw new ExceptionExtensions.ExpectedException(
-                Response.CreateChannelLimitation.Parse(Context.Guild.PreferredLocale));
+            throw new ExpectedException(Response.CreateChannelLimitation.Parse(Context.Guild.PreferredLocale));
         }
 
-        await _createChannelRepository.Create(new CreateChannels.CreateChannel(
-            Guid.NewGuid(),
-            (long) Context.Guild.Id,
-            (long) category.Id,
-            (long) channel.Id));
+        await _mediator.Send(new CreateGuildCreateChannelCommand(
+            (long) Context.Guild.Id, (long) category.Id, (long) channel.Id));
 
         var embed = new EmbedBuilder()
             .WithDefaultColor()

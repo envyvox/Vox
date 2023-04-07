@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Reflection;
-using Autofac;
-using Dapper;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
@@ -11,12 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using Serilog;
 using Vox.Data;
-using Vox.Framework.Autofac;
-using Vox.Framework.Database;
 using Vox.Services.Discord.Client;
-using Vox.Services.Discord.Client.Extensions;
+using Vox.Services.Discord.Extensions;
+using Vox.Services.Hangfire.CompletePoll;
 
 namespace Vox;
 
@@ -31,21 +28,14 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.Configure<ConnectionOptions>(x => x.ConnectionString = _config.GetConnectionString("main"));
         services.Configure<DiscordClientOptions>(x => _config.GetSection("DiscordOptions").Bind(x));
 
-        services
-            .AddHealthChecks()
-            .AddNpgSql(_config.GetConnectionString("main"))
-            .AddDbContextCheck<AppDbContext>();
-
-        services.AddDbContextPool<DbContext, AppDbContext>(o =>
+        services.AddDbContextPool<AppDbContext>(o =>
         {
+            o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             o.UseNpgsql(_config.GetConnectionString("main"),
                 s => { s.MigrationsAssembly(typeof(AppDbContext).Assembly.GetName().Name); });
         });
-
-        DefaultTypeMap.MatchNamesWithUnderscores = true;
 
         services.AddHangfireServer();
         services.AddHangfire(config =>
@@ -54,8 +44,16 @@ public class Startup
             config.UsePostgreSqlStorage(_config.GetConnectionString("main"));
         });
 
+        services.AddAutoMapper(typeof(IDiscordClientService).Assembly);
+        services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(IDiscordClientService).Assembly));
         services.AddMemoryCache();
-        services.AddControllers();
+
+        services
+            .AddControllers()
+            .AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            );
+
         services.AddOpenApiDocument();
 
         services.AddSingleton(_ =>
@@ -63,6 +61,8 @@ public class Startup
 
         services.AddSingleton<CommandHandler>();
         services.AddSingleton<IDiscordClientService, DiscordClientService>();
+
+        services.AddScoped<ICompletePollJob, CompletePollJob>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -95,23 +95,6 @@ public class Startup
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
         app.StartDiscord();
-    }
-
-    public void ConfigureContainer(ContainerBuilder builder)
-    {
-        var servicesAssembly = typeof(IDiscordClientService).Assembly;
-
-        builder.RegisterAssemblyTypes(servicesAssembly)
-            .Where(x => x.IsDefined(typeof(InjectableServiceAttribute), false) &&
-                        x.GetCustomAttribute<InjectableServiceAttribute>().IsSingletone)
-            .As(x => x.GetInterfaces()[0])
-            .SingleInstance();
-
-        builder.RegisterAssemblyTypes(servicesAssembly)
-            .Where(x => x.IsDefined(typeof(InjectableServiceAttribute), false) &&
-                        !x.GetCustomAttribute<InjectableServiceAttribute>().IsSingletone)
-            .As(x => x.GetInterfaces()[0])
-            .InstancePerLifetimeScope();
     }
 
     private static void MigrateDb(IServiceProvider serviceProvider)

@@ -2,10 +2,9 @@
 using Discord;
 using Discord.Interactions;
 using Vox.Data.Enums;
-using Vox.Services.Discord.Client;
-using Vox.Services.Discord.Client.Extensions;
-using Vox.Services.Discord.Embed;
-using Vox.Services.Discord.Emotes;
+using Vox.Services.Discord.Emote.Extensions;
+using Vox.Services.Discord.Extensions;
+using Vox.Services.Extensions;
 
 namespace Vox.Services.Discord.Interactions.SlashCommands.View;
 
@@ -19,7 +18,7 @@ public class ViewUser : InteractionModuleBase<SocketInteractionContext>
 
         var user = Context.Guild.GetUser(mentionedUser.Id);
 
-        var emotes = EmoteRepository.Emotes;
+        var emotes = DiscordRepository.Emotes;
         var embed = new EmbedBuilder()
             .WithDefaultColor()
             .WithThumbnailUrl(user.GetDisplayAvatarUrl())

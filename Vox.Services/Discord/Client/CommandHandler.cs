@@ -5,8 +5,8 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Vox.Data.Enums;
-using Vox.Services.Discord.Embed;
-using static Vox.Services.Discord.Client.Extensions.ExceptionExtensions;
+using Vox.Services.Discord.Extensions;
+using static Vox.Services.Extensions.ExceptionExtensions;
 
 namespace Vox.Services.Discord.Client;
 

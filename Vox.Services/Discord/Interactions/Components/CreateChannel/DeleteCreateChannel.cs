@@ -1,23 +1,22 @@
 ﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
+using MediatR;
 using Vox.Data.Enums;
-using Vox.Services.CreateChannels;
-using Vox.Services.Discord.Client;
-using Vox.Services.Discord.Client.Extensions;
-using Vox.Services.Discord.Emotes;
+using Vox.Services.Discord.Emote.Extensions;
+using Vox.Services.Extensions;
+using Vox.Services.GuildCreateChannel.Queries;
 using static Discord.Emote;
 
 namespace Vox.Services.Discord.Interactions.Components.CreateChannel;
 
 public class DeleteCreateChannel : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly ICreateChannelRepository _createChannelRepository;
+    private readonly IMediator _mediator;
 
-
-    public DeleteCreateChannel(ICreateChannelRepository createChannelRepository)
+    public DeleteCreateChannel(IMediator mediator)
     {
-        _createChannelRepository = createChannelRepository;
+        _mediator = mediator;
     }
 
     [ComponentInteraction("delete-create-channel")]
@@ -25,8 +24,8 @@ public class DeleteCreateChannel : InteractionModuleBase<SocketInteractionContex
     {
         await DeferAsync(true);
 
-        var emotes = EmoteRepository.Emotes;
-        var guildCreateChannels = await _createChannelRepository.List((long) Context.Guild.Id);
+        var emotes = DiscordRepository.Emotes;
+        var guildCreateChannels = await _mediator.Send(new GetGuildCreateChannelsQuery((long) Context.Guild.Id));
 
         var selectMenu = new SelectMenuBuilder()
             .WithPlaceholder(Response.DeleteCreateChannelPlaceholder.Parse(Context.Guild.PreferredLocale))
