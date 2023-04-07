@@ -1,11 +1,18 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using MediatR;
 using Vox.Services.Guild.Queries;
+using Vox.Services.GuildCreateChannel.Models;
 using Vox.Services.GuildCreateChannel.Queries;
+using Vox.Services.UserChannel.Commands;
+using Vox.Services.UserChannel.Models;
+using Vox.Services.UserChannel.Queries;
 
 namespace Vox.Services.Discord.Client.Events;
 
@@ -34,39 +41,94 @@ public class OnUserVoiceStateUpdatedHandler : IRequestHandler<OnUserVoiceStateUp
 
         if (guildCreateChannels.Count < 1) return;
 
-        if (newChannel is not null &&
-            guildCreateChannels
-                .Select(x => x.ChannelId)
-                .Contains((long) newChannel.Id))
-        {
-            var categoryId = (ulong) guildCreateChannels
-                .Single(x => x.ChannelId == (long) newChannel.Id)
-                .CategoryId;
+        var userChannel = await _mediator.Send(new GetUserChannel(request.SocketUser));
 
-            var createdChannel = await socketGuild.CreateVoiceChannelAsync(request.SocketUser.Username, x =>
+        if (IsCreateVoiceChannel(newChannel, guildCreateChannels))
+        {
+            var createdChannel = await socketGuild.CreateVoiceChannelAsync(userChannel.ChannelName, x =>
             {
-                x.CategoryId = categoryId;
-                x.UserLimit = guild.CreateRoomLimit;
+                x.CategoryId = (ulong) guildCreateChannels
+                    .Single(createChannel => createChannel.ChannelId == (long) newChannel.Id)
+                    .CategoryId;
+                x.UserLimit = userChannel.ChannelLimit;
             });
 
             await ((SocketGuildUser) request.SocketUser).ModifyAsync(x => x.Channel = createdChannel);
-
-            await createdChannel.AddPermissionOverwriteAsync(request.SocketUser, new OverwritePermissions(
-                manageChannel: PermValue.Allow,
-                moveMembers: PermValue.Allow,
-                manageRoles: PermValue.Allow));
+            await ApplyPermissionsToChannel(createdChannel, socketGuild,
+                VoxOverwrite.ToDiscordOverwrites(userChannel.Overwrites));
         }
 
-        if (oldChannel?.CategoryId is not null &&
-            guildCreateChannels
-                .Select(x => x.CategoryId)
-                .Contains((long) oldChannel.CategoryId) &&
-            guildCreateChannels
-                .Select(x => x.ChannelId)
-                .Contains((long) oldChannel.Id) is false &&
-            oldChannel.ConnectedUsers.Count == 0)
+        if (WasInCreatedChannelsCategory(oldChannel, guildCreateChannels))
         {
+            userChannel.UpdateChannelName(oldChannel!.Name);
+            userChannel.UpdateChannelLimit(oldChannel.UserLimit);
+            userChannel.UpdateOverwrites(oldChannel.PermissionOverwrites);
+
+            await _mediator.Send(new SaveUserChannel(userChannel));
             await oldChannel.DeleteAsync();
         }
+    }
+
+    private static async Task ApplyPermissionsToChannel(RestVoiceChannel? channel, SocketGuild? guild,
+        IReadOnlyCollection<Overwrite>? overwrites)
+    {
+        if (channel is null)
+        {
+            throw new Exception("Rest voice channel is null");
+        }
+
+        if (guild is null)
+        {
+            throw new Exception("Socket guild is null");
+        }
+
+        if (overwrites is null)
+        {
+            throw new Exception("Error parsing permissions");
+        }
+
+        foreach (var overwrite in overwrites)
+        {
+            switch (overwrite.TargetType)
+            {
+                case PermissionTarget.Role:
+                    var role = guild.GetRole(overwrite.TargetId);
+                    await channel.AddPermissionOverwriteAsync(role, overwrite.Permissions);
+                    break;
+                case PermissionTarget.User:
+                    var user = guild.GetUser(overwrite.TargetId);
+                    await channel.AddPermissionOverwriteAsync(user, overwrite.Permissions);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+
+    private static bool IsCreateVoiceChannel(
+        SocketVoiceChannel? channel,
+        IReadOnlyCollection<GuildCreateChannelDto>? guildCreateChannels)
+    {
+        if (channel is null) return false;
+        if (guildCreateChannels is null) return false;
+        return guildCreateChannels
+            .Select(x => x.ChannelId)
+            .Contains((long) channel.Id);
+    }
+
+    private static bool WasInCreatedChannelsCategory(
+        SocketVoiceChannel? channel,
+        IReadOnlyCollection<GuildCreateChannelDto>? guildCreateChannels)
+    {
+        if (channel is null) return false;
+        if (guildCreateChannels is null) return false;
+        return channel.CategoryId is not null &&
+               guildCreateChannels
+                   .Select(x => x.CategoryId)
+                   .Contains((long) channel.CategoryId) &&
+               guildCreateChannels
+                   .Select(x => x.ChannelId)
+                   .Contains((long) channel.Id) is false &&
+               channel.ConnectedUsers.Count == 0;
     }
 }

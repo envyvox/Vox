@@ -26,5 +26,6 @@ public class AppDbContext : DbContext
     public DbSet<GuildCreateChannel> GuildCreateChannels { get; set; }
     public DbSet<Poll> Polls { get; set; }
     public DbSet<PollAnswer> PollAnswers { get; set; }
+    public DbSet<UserChannel> UserChannels { get; set; }
     public DbSet<UserPollAnswer> UserPollAnswers { get; set; }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Vox.Data;
@@ -11,9 +12,11 @@ using Vox.Data;
 namespace Vox.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230407002742_AddedUserChannelEntity")]
+    partial class AddedUserChannelEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,6 +30,10 @@ namespace Vox.Data.Migrations
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    b.Property<int>("CreateRoomLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("create_room_limit");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -144,23 +151,23 @@ namespace Vox.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("channel_name");
 
-                    b.Property<string>("OverwritesData")
+                    b.Property<string>("Permissions")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("overwrites_data");
+                        .HasColumnName("permissions");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_user_channels");
+                        .HasName("pk_user_channel");
 
                     b.HasIndex("UserId")
                         .IsUnique()
-                        .HasDatabaseName("ix_user_channels_user_id");
+                        .HasDatabaseName("ix_user_channel_user_id");
 
-                    b.ToTable("user_channels");
+                    b.ToTable("user_channel");
                 });
 
             modelBuilder.Entity("Vox.Data.Entities.UserPollAnswer", b =>

@@ -7,7 +7,6 @@ using Vox.Data.Enums;
 using Vox.Services.Discord.Emote.Extensions;
 using Vox.Services.Discord.Extensions;
 using Vox.Services.Extensions;
-using Vox.Services.Guild.Commands;
 using Vox.Services.GuildCreateChannel.Queries;
 using static Discord.Emote;
 
@@ -69,26 +68,5 @@ public class Settings : InteractionModuleBase<SocketInteractionContext>
                 disabled: guildCreateChannels.Any() is false);
 
         await FollowupAsync(embed: embed.Build(), components: components.Build());
-    }
-
-    [SlashCommand("create-channels-limit", "Manage created channels user limit")]
-    public async Task CreateChannelsLimitTask(
-        [Summary("number", "Number of users that can connect to created channel by default")] [MaxValue(99)]
-        int limit)
-    {
-        await DeferAsync(true);
-
-        await _mediator.Send(new UpdateGuildCreateRoomLimitCommand((long) Context.Guild.Id, limit));
-
-        var embed = new EmbedBuilder()
-            .WithDefaultColor()
-            .WithAuthor(
-                Response.SettingsCreateChannelsLimit.Parse(Context.Guild.PreferredLocale),
-                Context.User.GetAvatarUrl())
-            .WithDescription(
-                Response.SettingsCreateChannelsLimitDesc.Parse(Context.Guild.PreferredLocale,
-                    Context.User.Mention, limit));
-
-        await FollowupAsync(embed: embed.Build());
     }
 }

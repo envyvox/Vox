@@ -6,6 +6,7 @@ using Vox.Data.Enums;
 using Vox.Services.Discord.Emote.Extensions;
 using Vox.Services.Discord.Extensions;
 using Vox.Services.Extensions;
+using Vox.Services.Guild.Queries;
 using Vox.Services.GuildCreateChannel.Commands;
 using Vox.Services.GuildCreateChannel.Queries;
 using static Vox.Services.Extensions.ExceptionExtensions;
@@ -33,7 +34,8 @@ public class NewCreateChannel : InteractionModuleBase<SocketInteractionContext>
             Response.NewCreatedChannelName.Parse(Context.Guild.PreferredLocale),
             x => x.CategoryId = category.Id);
 
-        var guildCreateChannels = await _mediator.Send(new GetGuildCreateChannelsQuery((long) Context.Guild.Id));
+        var guild = await _mediator.Send(new GetGuildEntityQuery((long) Context.Guild.Id));
+        var guildCreateChannels = await _mediator.Send(new GetGuildCreateChannelsQuery(guild.Id));
 
         if (guildCreateChannels.Count >= 3)
         {

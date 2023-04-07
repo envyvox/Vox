@@ -47,7 +47,6 @@ public class CreateGuildEntityHandler : IRequestHandler<CreateGuildEntityCommand
         var created = await db.CreateEntity(new Data.Entities.Guild
         {
             Id = request.Id,
-            CreateRoomLimit = 0,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         });
