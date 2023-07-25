@@ -40,10 +40,7 @@ public class DiscordClientService : IDiscordClientService
             GatewayIntents =
                 GatewayIntents.Guilds |
                 GatewayIntents.GuildMembers |
-                GatewayIntents.GuildMessageReactions |
-                GatewayIntents.GuildMessages |
-                GatewayIntents.GuildVoiceStates |
-                GatewayIntents.GuildScheduledEvents
+                GatewayIntents.GuildVoiceStates
         });
         _interactionService = new InteractionService(_socketClient.Rest, new InteractionServiceConfig
         {
