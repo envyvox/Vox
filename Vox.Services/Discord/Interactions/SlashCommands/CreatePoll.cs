@@ -40,9 +40,9 @@ public class CreatePoll : InteractionModuleBase<SocketInteractionContext>
         [Summary("answers", "Answers separated by ; symbol (ex: 1;2;3)")]
         string providedAnswers,
         [Summary("mention-everyone", "Adds @everyone to the message")]
-        bool mentionEveryone,
+        bool mentionEveryone = false,
         [Summary("create-thread", "Creates a thread from the message")]
-        bool createThread,
+        bool createThread = false,
         [Summary("max-answers", "Number of options that can be selected at the same time (default 1)")]
         [MinValue(1)]
         [MaxValue(25)]
