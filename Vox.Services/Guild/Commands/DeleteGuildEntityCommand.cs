@@ -39,10 +39,12 @@ public class DeleteGuildEntityHandler : IRequestHandler<DeleteGuildEntityCommand
                 $"Guild with id {request.Id} not exist in database");
         }
 
-        await db.DeleteEntity(entity);
+        entity.Removed = true;
+
+        await db.UpdateEntity(entity);
 
         _logger.LogInformation(
-            "Deleted guild entity {@Entity}",
+            "Updated guild entity {@Entity} with removed flag",
             entity);
     }
 }
