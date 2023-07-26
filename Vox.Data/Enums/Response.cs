@@ -75,6 +75,8 @@ public enum Response : byte
     PollAnswersAlready,
     CreatePollAnswersLimitation,
     CreatePollAnswerTooLong,
+    SendEmbedInvalidJson,
+    NullChannel,
 }
 
 public static class ResponseHelper
@@ -501,6 +503,20 @@ public static class ResponseHelper
             {
                 Language.English => "Answer can not be longer than 60 characters.",
                 Language.Russian => "Ответ не может быть длинее чем 60 символов.",
+                _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
+            },
+            Response.SendEmbedInvalidJson => language switch
+            {
+                Language.English =>
+                    "Invalid Json provided. Please use eb.nadeko.bot website for generating embed Json.",
+                Language.Russian =>
+                    "Неверный Json. Пожалуйста используйте вебсайт eb.nadeko.bot для генерации Json эмбеда.",
+                _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
+            },
+            Response.NullChannel => language switch
+            {
+                Language.English => "Provided channel not found, try again.",
+                Language.Russian => "Указанный канал не найден, попробуйте еще раз.",
                 _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
             },
             _ => throw new ArgumentOutOfRangeException(nameof(response), response, null)
