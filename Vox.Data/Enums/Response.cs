@@ -72,7 +72,9 @@ public enum Response : byte
     CreateChannelLimitation,
     MaxCharsLimitation,
     PollAnswersLimitation,
-    PollAnswersAlready
+    PollAnswersAlready,
+    CreatePollAnswersLimitation,
+    CreatePollAnswerTooLong,
 }
 
 public static class ResponseHelper
@@ -313,9 +315,9 @@ public static class ResponseHelper
             },
             Response.SettingsCreateChannelDesc => language switch
             {
-                Language.English => 
+                Language.English =>
                     "{0}, here you can create or delete a category with created channels, to do this, use the **buttons** under this message.",
-                Language.Russian => 
+                Language.Russian =>
                     "{0}, тут вы можете создать или удалить категорию с создаваемыми каналами, для этого воспользуйтесь **кнопками** под этим сообщением.",
                 _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
             },
@@ -487,6 +489,18 @@ public static class ResponseHelper
             {
                 Language.English => "Your response will be completely anonymous.",
                 Language.Russian => "Ваш ответ будет полностью анонимным.",
+                _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
+            },
+            Response.CreatePollAnswersLimitation => language switch
+            {
+                Language.English => "You can not provide more than 25 answers.",
+                Language.Russian => "Количество ответов не может быть более 25.",
+                _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
+            },
+            Response.CreatePollAnswerTooLong => language switch
+            {
+                Language.English => "Answer can not be longer than 60 characters.",
+                Language.Russian => "Ответ не может быть длинее чем 60 символов.",
                 _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
             },
             _ => throw new ArgumentOutOfRangeException(nameof(response), response, null)
