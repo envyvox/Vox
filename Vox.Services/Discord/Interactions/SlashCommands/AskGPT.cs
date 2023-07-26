@@ -18,6 +18,9 @@ public class AskGPT : InteractionModuleBase<SocketInteractionContext>
     private readonly IConfiguration _config;
     private const int MaxFieldLength = 1024;
 
+    // ReSharper disable once InconsistentNaming
+    private const string OpenAIEndpoint = "https://api.openai.com/v1/chat/completions";
+
     /// <inheritdoc />
     public AskGPT(IConfiguration config)
     {
@@ -30,7 +33,7 @@ public class AskGPT : InteractionModuleBase<SocketInteractionContext>
         await DeferAsync(true);
 
         GPTRepository.UserMessages.TryGetValue(Context.User.Id, out var userMessages);
-        if (userMessages is null) userMessages = new List<Message>();
+        userMessages ??= new List<Message>();
 
         var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Add(
@@ -46,9 +49,7 @@ public class AskGPT : InteractionModuleBase<SocketInteractionContext>
         userMessages.Add(message);
         var requestData = new Request { ModelId = "gpt-3.5-turbo", Messages = userMessages };
 
-        using var response = await httpClient.PostAsJsonAsync(
-            _config.GetValue<string>("ChatGPT_Endpoint"),
-            requestData);
+        using var response = await httpClient.PostAsJsonAsync(OpenAIEndpoint, requestData);
 
         if (!response.IsSuccessStatusCode)
         {
